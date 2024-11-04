@@ -26,20 +26,19 @@ let score = 0;
 let scoreText;
 let gameOver = false;
 let restartText;
-let startText;
+let obstacleCount = 0;
 let music;
 let jumpSound;
 let gameOverSound;
-let obstacleCount = 0;
 
 function preload() {
-    this.load.image('background', 'assets/background.png'); // Sfondo
-    this.load.image('ground', 'assets/ground.png'); // Strada
-    this.load.image('obstacle', 'assets/obstacle.png'); // Ostacolo
-    this.load.spritesheet('runner', 'assets/runner-sprite.png', { frameWidth: 64, frameHeight: 64 }); // Sprite dell'uomo che corre
-    this.load.audio('backgroundMusic', 'assets/background-music.mp3'); // Musica di sottofondo
-    this.load.audio('jumpSound', 'assets/jump-sound.mp3'); // Suono del salto
-    this.load.audio('gameOverSound', 'assets/game-over-sound.mp3'); // Suono di game over
+    this.load.image('background', 'assets/background.png'); // Carica il tuo sfondo
+    this.load.image('ground', 'assets/ground.png'); // Carica l'immagine del terreno
+    this.load.image('obstacle', 'assets/obstacle.png'); // Carica l'immagine degli ostacoli
+    this.load.spritesheet('provolone', 'assets/provolone.png', { frameWidth: 32, frameHeight: 32 }); // Carica il provolone
+    this.load.audio('backgroundMusic', 'assets/background-music.mp3'); // Carica la musica di sottofondo
+    this.load.audio('jumpSound', 'assets/jump-sound.mp3'); // Carica il suono del salto
+    this.load.audio('gameOverSound', 'assets/game-over-sound.mp3'); // Carica il suono di game over
 }
 
 function create() {
@@ -51,49 +50,41 @@ function create() {
     // Sfondo
     background = this.add.tileSprite(400, 300, 800, 600, 'background');
 
-    // Creazione del terreno
+    // Crea il terreno
     ground = this.physics.add.staticGroup();
-    ground.create(400, 580, 'ground').setScale(1).refreshBody();
+    ground.create(400, 580, 'ground').setScale(1).refreshBody(); // Strada
 
-    // Creazione del personaggio
-    player = this.physics.add.sprite(100, 450, 'runner');
+    // Crea il personaggio
+    player = this.physics.add.sprite(100, 450, 'provolone');
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
 
-    // Animazione per il personaggio
     this.anims.create({
         key: 'run',
-        frames: this.anims.generateFrameNumbers('runner', { start: 0, end: 5 }), // Assicurati che i frame siano corretti
+        frames: this.anims.generateFrameNumbers('provolone', { start: 0, end: 3 }),
         frameRate: 10,
         repeat: -1
     });
 
     player.anims.play('run', true);
 
-    // Controlli
     cursors = this.input.keyboard.createCursorKeys();
 
-    // Gruppo di ostacoli
     obstacles = this.physics.add.group();
-
-    // Aggiunta ostacoli a intervalli
     this.time.addEvent({
-        delay: 1500, // Tempo tra la creazione degli ostacoli
+        delay: 1500,
         callback: addObstacle,
         callbackScope: this,
         loop: true
     });
 
-    // Collisioni
     this.physics.add.collider(player, ground);
     this.physics.add.collider(player, obstacles, hitObstacle, null, this);
 
-    // Testo del punteggio
     scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
-    // Pulsante di avvio
-    startText = this.add.text(400, 300, 'Clicca per iniziare', { fontSize: '32px', fill: '#000' }).setOrigin(0.5);
-    this.input.on('pointerdown', startGame, this);
+    // Testo per iniziare il gioco
+    this.add.text(400, 300, 'Clicca per iniziare', { fontSize: '32px', fill: '#000' }).setOrigin(0.5).setInteractive().on('pointerdown', startGame, this);
 }
 
 function update() {
@@ -101,53 +92,39 @@ function update() {
         return; // Non eseguire il gioco se è finito
     }
 
-    // Scorrimento dello sfondo
-    background.tilePositionX += 2; // Lo sfondo scorre
+    background.tilePositionX += 2; // Scorrimento dello sfondo
 
-    // Salto del personaggio
     if (cursors.space.isDown && player.body.touching.down) {
-        player.setVelocityY(-350);
+        player.setVelocityY(-350); // Salto
         this.sound.play('jumpSound'); // Suono del salto
     }
 
-    // Aggiornamento del punteggio
+    // Aggiorna il punteggio
     score += 0.01; // Incremento del punteggio
     scoreText.setText('Score: ' + Math.floor(score));
-
-    // Aumento ostacoli nel tempo
-    if (Math.floor(score / 10) > obstacleCount) {
-        obstacleCount++;
-        this.time.addEvent({
-            delay: 1500 - (obstacleCount * 100), // Riduci il tempo per l'aggiunta degli ostacoli
-            callback: addObstacle,
-            callbackScope: this,
-            loop: true
-        });
-    }
 }
 
 function startGame() {
-    // Nascondi il pulsante di avvio e resetta il gioco
-    startText.setVisible(false);
+    // Inizializza il gioco
     gameOver = false;
     score = 0;
     scoreText.setText('Score: 0');
     player.setVelocity(0);
     player.setPosition(100, 450);
-    obstacles.clear(true, true); // Rimuovi ostacoli esistenti
+    obstacles.clear(true, true); // Rimuovi gli ostacoli esistenti
     music.play(); // Riprendi la musica
 }
 
 function addObstacle() {
-    const obstacle = obstacles.create(800, 550, 'obstacle'); // Posiziona l'ostacolo sulla strada
-    obstacle.setVelocityX(-200); // Mantieni questo per muovere l'ostacolo verso sinistra
-    obstacle.setCollideWorldBounds(true); // Assicurati che l'ostacolo non esca dallo schermo
-    obstacle.setImmovable(true); // L'ostacolo non si muove
+    const obstacle = obstacles.create(800, Phaser.Math.Between(500, 550), 'obstacle'); // Posiziona l'ostacolo sulla strada
+    obstacle.setVelocityX(-200); // Ostacolo che si muove a sinistra
+    obstacle.setCollideWorldBounds(false); // Non deve rimanere all'interno del mondo
+    obstacle.setImmovable(true); // L'ostacolo è immobile
 }
 
 function hitObstacle(player, obstacle) {
     this.physics.pause();
-    player.setTint(0xff0000);
+    player.setTint(0xff0000); // Colore rosso quando colpisce un ostacolo
     player.anims.stop();
     music.stop(); // Ferma la musica di sottofondo
     this.sound.play('gameOverSound'); // Suono di game over
@@ -155,8 +132,7 @@ function hitObstacle(player, obstacle) {
     scoreText.setText('Game Over! Score: ' + Math.floor(score));
 
     // Mostra il pulsante "RIPROVA!"
-    restartText = this.add.text(400, 300, 'RIPROVA!', { fontSize: '32px', fill: '#000' }).setOrigin(0.5);
-    restartText.setInteractive();
+    restartText = this.add.text(400, 300, 'RIPROVA!', { fontSize: '32px', fill: '#000' }).setOrigin(0.5).setInteractive();
     restartText.on('pointerdown', restartGame, this);
 }
 
