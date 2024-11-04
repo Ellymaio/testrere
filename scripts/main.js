@@ -5,7 +5,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 500 },
+            gravity: { y: 0 }, // Imposta la gravità a zero per evitare che gli oggetti saltino
             debug: false
         }
     },
@@ -30,16 +30,16 @@ let startText;
 let music;
 let jumpSound;
 let gameOverSound;
-let obstacleCount = 0; // Numero iniziale di ostacoli
+let obstacleCount = 0;
 
 function preload() {
     this.load.image('background', 'assets/background.png');
     this.load.image('ground', 'assets/ground.png');
     this.load.image('obstacle', 'assets/obstacle.png');
-    this.load.spritesheet('provolone', 'assets/provolone.png', { frameWidth: 32, frameHeight: 32 });
-    this.load.audio('backgroundMusic', 'assets/background-music.mp3'); // Aggiungi il tuo file audio qui
-    this.load.audio('jumpSound', 'assets/jump-sound.mp3'); // Aggiungi il suono del salto
-    this.load.audio('gameOverSound', 'assets/game-over-sound.mp3'); // Aggiungi il suono di game over
+    this.load.spritesheet('runner', 'assets/runner-sprite.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.audio('backgroundMusic', 'assets/background-music.mp3');
+    this.load.audio('jumpSound', 'assets/jump-sound.mp3');
+    this.load.audio('gameOverSound', 'assets/game-over-sound.mp3');
 }
 
 function create() {
@@ -48,28 +48,35 @@ function create() {
     music.loop = true;
     music.play();
 
+    // Sfondo
     background = this.add.tileSprite(400, 300, 800, 600, 'background');
 
+    // Creazione del terreno
     ground = this.physics.add.staticGroup();
     ground.create(400, 580, 'ground').setScale(1).refreshBody();
 
-    player = this.physics.add.sprite(100, 450, 'provolone');
+    // Creazione del personaggio
+    player = this.physics.add.sprite(100, 450, 'runner');
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
 
+    // Animazione per il personaggio
     this.anims.create({
         key: 'run',
-        frames: this.anims.generateFrameNumbers('provolone', { start: 0, end: 3 }),
+        frames: this.anims.generateFrameNumbers('runner', { start: 0, end: 5 }), // Assicurati che i frame siano corretti
         frameRate: 10,
         repeat: -1
     });
 
     player.anims.play('run', true);
 
+    // Controlli
     cursors = this.input.keyboard.createCursorKeys();
 
+    // Gruppo di ostacoli
     obstacles = this.physics.add.group();
 
+    // Aggiunta ostacoli a intervalli
     this.time.addEvent({
         delay: 1500,
         callback: addObstacle,
@@ -77,11 +84,13 @@ function create() {
         loop: true
     });
 
+    // Collisioni
     this.physics.add.collider(player, ground);
     this.physics.add.collider(player, obstacles, hitObstacle, null, this);
 
+    // Testo del punteggio
     scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
-    
+
     // Pulsante di avvio
     startText = this.add.text(400, 300, 'Clicca per iniziare', { fontSize: '32px', fill: '#000' }).setOrigin(0.5);
     this.input.on('pointerdown', startGame, this);
@@ -92,17 +101,20 @@ function update() {
         return; // Non eseguire il gioco se è finito
     }
 
-    background.tilePositionX += 2; // Scorrimento dello sfondo
+    // Scorrimento dello sfondo
+    background.tilePositionX += 2; // Lo sfondo scorre
 
+    // Salto del personaggio
     if (cursors.space.isDown && player.body.touching.down) {
         player.setVelocityY(-350);
         this.sound.play('jumpSound'); // Suono del salto
     }
 
+    // Aggiornamento del punteggio
     score += 0.01; // Incremento del punteggio
     scoreText.setText('Score: ' + Math.floor(score));
 
-    // Aumenta il numero di ostacoli ogni 30 secondi
+    // Aumento ostacoli nel tempo
     if (Math.floor(score / 10) > obstacleCount) {
         obstacleCount++;
         this.time.addEvent({
@@ -127,8 +139,8 @@ function startGame() {
 }
 
 function addObstacle() {
-    const obstacle = obstacles.create(800, Phaser.Math.Between(400, 550), 'obstacle');
-    obstacle.setVelocityX(-200);
+    const obstacle = obstacles.create(800, 550, 'obstacle');
+    obstacle.setVelocityX(-200); // Mantieni questo per muovere l'ostacolo verso sinistra
     obstacle.setCollideWorldBounds(false);
     obstacle.setImmovable(true);
 }
