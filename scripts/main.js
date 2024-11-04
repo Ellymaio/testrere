@@ -5,7 +5,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 0 }, // Imposta la gravità a zero per evitare che gli oggetti saltino
+            gravity: { y: 0 }, // Imposta la gravità a zero
             debug: false
         }
     },
@@ -33,13 +33,13 @@ let gameOverSound;
 let obstacleCount = 0;
 
 function preload() {
-    this.load.image('background', 'assets/background.png');
-    this.load.image('ground', 'assets/ground.png');
-    this.load.image('obstacle', 'assets/obstacle.png');
-    this.load.spritesheet('runner', 'assets/runner-sprite.png', { frameWidth: 64, frameHeight: 64 });
-    this.load.audio('backgroundMusic', 'assets/background-music.mp3');
-    this.load.audio('jumpSound', 'assets/jump-sound.mp3');
-    this.load.audio('gameOverSound', 'assets/game-over-sound.mp3');
+    this.load.image('background', 'assets/background.png'); // Sfondo
+    this.load.image('ground', 'assets/ground.png'); // Strada
+    this.load.image('obstacle', 'assets/obstacle.png'); // Ostacolo
+    this.load.spritesheet('runner', 'assets/runner-sprite.png', { frameWidth: 64, frameHeight: 64 }); // Sprite dell'uomo che corre
+    this.load.audio('backgroundMusic', 'assets/background-music.mp3'); // Musica di sottofondo
+    this.load.audio('jumpSound', 'assets/jump-sound.mp3'); // Suono del salto
+    this.load.audio('gameOverSound', 'assets/game-over-sound.mp3'); // Suono di game over
 }
 
 function create() {
@@ -78,7 +78,7 @@ function create() {
 
     // Aggiunta ostacoli a intervalli
     this.time.addEvent({
-        delay: 1500,
+        delay: 1500, // Tempo tra la creazione degli ostacoli
         callback: addObstacle,
         callbackScope: this,
         loop: true
@@ -139,10 +139,10 @@ function startGame() {
 }
 
 function addObstacle() {
-    const obstacle = obstacles.create(800, 550, 'obstacle');
+    const obstacle = obstacles.create(800, 550, 'obstacle'); // Posiziona l'ostacolo sulla strada
     obstacle.setVelocityX(-200); // Mantieni questo per muovere l'ostacolo verso sinistra
-    obstacle.setCollideWorldBounds(false);
-    obstacle.setImmovable(true);
+    obstacle.setCollideWorldBounds(true); // Assicurati che l'ostacolo non esca dallo schermo
+    obstacle.setImmovable(true); // L'ostacolo non si muove
 }
 
 function hitObstacle(player, obstacle) {
